@@ -65,7 +65,12 @@ public class ReentrantEntityLocker implements EntityLocker {
 
     @Override
     public void unlockGlobally() {
+        cleanupLocks();
         globalLock.writeLock().unlock();
+    }
+
+    private void cleanupLocks() {
+        locks.entrySet().removeIf(entry -> !entry.getValue().isHeldByCurrentThread());
     }
 
     private Lock getLock(Object id) {
