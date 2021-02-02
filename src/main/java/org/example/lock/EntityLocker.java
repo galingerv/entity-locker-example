@@ -3,6 +3,10 @@ package org.example.lock;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+/**
+ * Provides methods for acquiring and releasing locks by entity IDs or global lock.
+ * Semantics of locks is similar to standard {@code Lock} interface.
+ */
 public interface EntityLocker {
     void lock(Object id);
 

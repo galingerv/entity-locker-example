@@ -15,6 +15,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>23.6-jre</version>
+        </dependency>
+        <dependency>
             <groupId>org.openjdk.jcstress</groupId>
             <artifactId>jcstress-core</artifactId>
             <version>${jcstress.version}</version>
