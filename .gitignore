@@ -24,3 +24,6 @@ out.txt
 .project
 
 .flattened-pom.xml
+
+results
+jcstress-results-*.bin.gz
