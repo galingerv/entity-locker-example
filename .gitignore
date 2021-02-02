@@ -1,0 +1,26 @@
+# .iml files
+*.iml
+
+## File-based project format:
+*.ipr
+*.iws
+*.ids
+
+#all files in .idea directory
+.idea/
+
+# IntelliJ
+/out/
+out.txt
+
+### target directories
+**/target/
+**/logs/
+**/log/
+
+*.log
+
+.classpath
+.project
+
+.flattened-pom.xml
