@@ -98,21 +98,4 @@ public class ReentrantEntityLockerTest {
 
         assertThat(stateful.toString(), equalTo("OK"));
     }
-
-    @Test
-    void lockEscalation() {
-        entityLocker.protectedExecute(1L, () -> {
-            entityLocker.protectedExecute(2L, () -> {
-                entityLocker.protectedExecute(3L, () -> {
-                    entityLocker.protectedExecute(4L, () -> {
-                        entityLocker.protectedExecute(5L, () -> {
-                            stateful.append("OK");
-                        });
-                    });
-                });
-            });
-        });
-
-        assertThat(stateful.toString(), equalTo("OK"));
-    }
 }
