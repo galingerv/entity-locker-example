@@ -20,8 +20,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Implements methods for acquiring and releasing reentrant locks by entity IDs or global lock.
  * Entity locks and global locks are reentrant when interleaved in any order.
  *
- * <p>The only way to cleanup internal map is to acquire and release the global lock.
- *
  * <p>Supported types for entity IDs are:
  * <ul>
  * <li> all Java primitive types,
