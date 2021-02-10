@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Timeout;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Timeout(value = 5, unit = SECONDS)
 public class ReentrantEntityLockerTest {
@@ -97,5 +98,19 @@ public class ReentrantEntityLockerTest {
         });
 
         assertThat(stateful.toString(), equalTo("OK"));
+    }
+
+    @Test
+    void unlockOnNotLockedKey_throws_IllegalMonitorStateException() {
+        assertThrows(IllegalMonitorStateException.class, () -> {
+            entityLocker.unlock(1L);
+        });
+    }
+
+    @Test
+    void unlockGlobally_throws_IllegalMonitorStateException() {
+        assertThrows(IllegalMonitorStateException.class, () -> {
+            entityLocker.unlockGlobally();
+        });
     }
 }
