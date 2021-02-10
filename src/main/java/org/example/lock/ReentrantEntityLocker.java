@@ -20,8 +20,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Implements methods for acquiring and releasing reentrant locks by entity IDs or global lock.
  * Entity locks and global locks are reentrant when interleaved in any order.
  *
- * <p>The only way to cleanup internal map is to acquire and release the global lock.
- *
  * <p>Supported types for entity IDs are:
  * <ul>
  * <li> all Java primitive types,
@@ -48,7 +46,7 @@ public class ReentrantEntityLocker implements EntityLocker {
             BigDecimal.class,
             BigInteger.class
     );
-    private final Map<Object, ReentrantLock> locks = new ConcurrentHashMap<>();
+    private final Map<Object, UsageCountingReentrantLock> locks = new ConcurrentHashMap<>();
     private final ReadWriteLock globalLock = new ReentrantReadWriteLock();
     private final ThreadLocal<Integer> holdingOrdinaryLock = ThreadLocal.withInitial(() -> 0);
 
@@ -105,24 +103,39 @@ public class ReentrantEntityLocker implements EntityLocker {
     @Override
     public void unlock(Object id) {
         checkId(id);
-        getLock(id).unlock();
+        unlock0(id);
         globalLock.readLock().unlock();
         decrementOrdinaryLock();
     }
 
     @Override
     public void unlockGlobally() {
-        // dumb way to clean up our map
-        cleanupLocks();
         globalLock.writeLock().unlock();
     }
 
-    private void cleanupLocks() {
-        locks.entrySet().removeIf(entry -> !entry.getValue().isHeldByCurrentThread());
+    public int size() {
+        return locks.size();
     }
 
     private Lock getLock(Object id) {
-        return locks.computeIfAbsent(id, o -> new ReentrantLock());
+        return locks.compute(id, (ignoredKey, lock) -> {
+            if (lock == null) {
+                lock = new UsageCountingReentrantLock();
+            }
+            lock.use();
+            return lock;
+        });
+    }
+
+    private void unlock0(Object id) {
+        locks.compute(id, (ignoredKey, lock) -> {
+            if (lock == null) {
+                throw new IllegalMonitorStateException();
+            }
+            boolean canBeRemoved = lock.unuse();
+            lock.unlock();
+            return canBeRemoved ? null : lock;
+        });
     }
 
     private int getOrdinaryLockCount() {
@@ -145,6 +158,24 @@ public class ReentrantEntityLocker implements EntityLocker {
     private static void checkType(Object id) {
         if (!SUPPORTED_TYPES.contains(id.getClass())) {
             throw new UnsupportedOperationException("Unsupported ID type " + id.getClass().getName());
+        }
+    }
+
+    private static class UsageCountingReentrantLock extends ReentrantLock {
+        // intentions to use for locking
+        // change only in ConcurrentMap's critical sections
+        private int usageCount = 0;
+
+        // register intention to use for locking
+        private void use() {
+            usageCount++;
+        }
+
+        // register event of unlocking
+        // returns true if there's no pending intentions to use
+        private boolean unuse() {
+            usageCount--;
+            return usageCount == 0;
         }
     }
 }

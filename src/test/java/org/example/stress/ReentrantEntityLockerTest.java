@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Timeout;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Timeout(value = 5, unit = SECONDS)
 public class ReentrantEntityLockerTest {
@@ -100,19 +101,16 @@ public class ReentrantEntityLockerTest {
     }
 
     @Test
-    void lockEscalation() {
-        entityLocker.protectedExecute(1L, () -> {
-            entityLocker.protectedExecute(2L, () -> {
-                entityLocker.protectedExecute(3L, () -> {
-                    entityLocker.protectedExecute(4L, () -> {
-                        entityLocker.protectedExecute(5L, () -> {
-                            stateful.append("OK");
-                        });
-                    });
-                });
-            });
+    void unlockOnNotLockedKey_throws_IllegalMonitorStateException() {
+        assertThrows(IllegalMonitorStateException.class, () -> {
+            entityLocker.unlock(1L);
         });
+    }
 
-        assertThat(stateful.toString(), equalTo("OK"));
+    @Test
+    void unlockGlobally_throws_IllegalMonitorStateException() {
+        assertThrows(IllegalMonitorStateException.class, () -> {
+            entityLocker.unlockGlobally();
+        });
     }
 }
