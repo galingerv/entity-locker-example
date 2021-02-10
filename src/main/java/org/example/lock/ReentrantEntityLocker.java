@@ -118,7 +118,7 @@ public class ReentrantEntityLocker implements EntityLocker {
     }
 
     private Lock getLock(Object id) {
-        return locks.compute(id, (o, lock) -> {
+        return locks.compute(id, (ignoredKey, lock) -> {
             if (lock == null) {
                 lock = new UsageCountingReentrantLock();
             }
